@@ -36,14 +36,14 @@ infix_bit_xor     = @{ "^" }
 infix_bit_shift_l = @{ "<<" }
 infix_bit_shift_r = @{ ">>" }
 infix_extends     = @{ "<:" }
-infix_function    = ${ "~" ~ id ~ "~" }
 // this is a syntax sugar for function application
+infix_function    = ${ "~" ~ id ~ "~" }
 infix_assign          = @{ "=" }
 infix_match_equals    = @{ "?=" }
 infix_assign_slot     = @{ "::=" }
 infix_assign_get_cont =  { "->" ~ id ~ "=" }
-infix_pipe            = @{ "|>" }
 // this is a syntax sugar for function application
+infix_pipe            = @{ "|>" }
 
 postfix_bang = @{ "!" ~ !"=" }
 
@@ -267,7 +267,7 @@ lambda_expr = { no_param_lambda_expr | tr_lambda }
 // ----- quotations -----
 
 paren_expr = _{ "(" ~ annotated_expr ~ ")" }
-block      =  { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ (next_stmt | NEWLINE)* ~ "}" | "{" ~ (next_stmt | NEWLINE)+ ~ "}" }
+block      =  { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ (next_stmt | NEWLINE)* ~ "}" }
 
 // ----- chain -----
 
