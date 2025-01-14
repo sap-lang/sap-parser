@@ -264,12 +264,6 @@ tr_lambda            = { "\\" ~ pattern* ~ implicit_params? ~ guard? ~ "->" ~ an
 no_param_lambda_expr = { "_{" ~ next_stmt* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ next_stmt* ~ "}" }
 
 lambda_expr = { no_param_lambda_expr | tr_lambda }
-
-c_params_body = _{ annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
-c_app_params  =  {
-    "(" ~ NEWLINE* ~ c_params_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ ")"
-}
-c_app         = ${ op_expr ~ c_app_params }
 // ----- quotations -----
 
 paren_expr = _{ "(" ~ annotated_expr ~ ")" }
@@ -277,10 +271,16 @@ block      =  { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)*
 
 // ----- chain -----
 
+c_params_body = _{ annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
+
+
 index         =  { "[" ~ annotated_expr ~ "]" }
 slice         =  { "[" ~ #from = annotated_expr? ~ ":" ~ #to = annotated_expr? ~ (":" ~ #step = annotated_expr?)? ~ "]" }
 access        =  { "." ~ id }
-chain_op      =  { slice | index | access }
+c_app_params  =  {
+    "(" ~ NEWLINE* ~ c_params_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ ")"
+}
+chain_op      =  { slice | index | access | c_app_params }
 chain_operand = _{
     block
   | lambda_expr
@@ -292,17 +292,15 @@ chain_operand = _{
 op_expr = _{ chain_operand ~ chain_op* }
 
 // ----- expr -----
-param    =  { expr }
-
-primary = { c_app | op_expr | pattern }
+ml_app = { op_expr ~ expr+ }
+primary = { ml_app | op_expr | pattern }
 expr    = { prefix_op* ~ primary ~ postfix_op* ~ (infix_op ~ NEWLINE* ~ prefix_op* ~ primary ~ postfix_op*)* }
 
-app      =  { expr ~ param+ }
-app_expr = _{ app | expr }
-
-annotation_body = _{ macro_id ~ ("(" ~ primary ~ ")")? }
+annotation_body = _{ macro_id ~ ("(" ~ expr ~ ")")? }
 annotation      =  { "@" ~ annotation_body }
-annotated_expr  =  { annotation* ~ app_expr }
+annotated_expr  =  { annotation* ~ expr }
+
+
 // ========== FINAL ==========
 
 file = {
