@@ -36,14 +36,17 @@ infix_bit_xor     = @{ "^" }
 infix_bit_shift_l = @{ "<<" }
 infix_bit_shift_r = @{ ">>" }
 infix_extends     = @{ "<:" }
-// this is a syntax sugar for function application
+// sugar for function application
 infix_function    = ${ "~" ~ id ~ "~" }
 infix_assign          = @{ "=" }
 infix_match_equals    = @{ "?=" }
 infix_assign_slot     = @{ "::=" }
 infix_assign_get_cont =  { "->" ~ id ~ "=" }
-// this is a syntax sugar for function application
+infix_assign_get_cont_match_equals = { "->" ~ id ~ "?=" }
+// sugar for function application
 infix_pipe            = @{ "|>" }
+// sugar a $ f 1 2 = ^{ f : g } ?= a ? g a 1 2 : f a 1 2
+infix_find_and_call_with_this = @{"$"}
 
 postfix_bang = @{ "!" ~ !"=" }
 
@@ -87,6 +90,8 @@ prefix_op = _{
 infix_op = _{
   infix_add
 | infix_assign_get_cont
+| infix_assign_get_cont_match_equals
+| infix_find_and_call_with_this
 | infix_sub
 | infix_mul
 | infix_div
@@ -267,7 +272,7 @@ lambda_expr = { no_param_lambda_expr | tr_lambda }
 // ----- quotations -----
 
 paren_expr = _{ "(" ~ annotated_expr ~ ")" }
-block      =  { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ (next_stmt | NEWLINE)* ~ "}" }
+block      =  { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ next_stmt* ~ "}" }
 
 // ----- chain -----
 
@@ -292,13 +297,16 @@ chain_operand = _{
 op_expr = _{ chain_operand ~ chain_op* }
 
 // ----- expr -----
-ml_app = { op_expr ~ expr+ }
-primary = { ml_app | op_expr | pattern }
+primary = { op_expr | pattern }
 expr    = { prefix_op* ~ primary ~ postfix_op* ~ (infix_op ~ NEWLINE* ~ prefix_op* ~ primary ~ postfix_op*)* }
+
+param    =  { expr }
+ml_app      =  { expr ~ param+ }
+ml_app_expr = _{ ml_app | expr }
 
 annotation_body = _{ macro_id ~ ("(" ~ expr ~ ")")? }
 annotation      =  { "@" ~ annotation_body }
-annotated_expr  =  { annotation* ~ expr }
+annotated_expr  =  { annotation* ~ ml_app_expr }
 
 
 // ========== FINAL ==========
