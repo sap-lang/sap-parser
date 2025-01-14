@@ -74,6 +74,53 @@ magic_fn_id = @{
   | "(bang)"
 }
 
+// ========== Operators ==========
+
+prefix_op = _{
+  prefix_not
+| prefix_bit_not
+| prefix_neg
+| prefix_yield
+| prefix_yield_child
+}
+
+infix_op = _{
+  infix_add
+| infix_assign_get_cont
+| infix_sub
+| infix_mul
+| infix_div
+| infix_mod
+| infix_eq
+| infix_neq
+| infix_extends
+| infix_le
+| infix_ge
+| infix_lt
+| infix_gt
+| infix_and
+| infix_or
+| infix_pipe
+| infix_bit_or
+| infix_bit_and
+| infix_bit_xor
+| infix_bit_shift_l
+| infix_bit_shift_r
+| infix_function
+| infix_assign
+| infix_match_equals
+| infix_assign_slot
+}
+
+postfix_op = _{
+  postfix_bang
+| postfix_trinary_op
+}
+
+postfix_trinary_op = {
+  "?" ~ NEWLINE* ~ annotated_expr ~ ":" ~ NEWLINE* ~ annotated_expr
+}
+
 // ========== Literals ==========
 // ----- regex -----
 regex          = _{ "/" ~ !"*"+ ~ regex_inner ~ "/" }
@@ -205,53 +252,6 @@ pattern = {
   | literal
   | macro_pattern
   | id
-}
-
-// ========== Operators ==========
-
-prefix_op = _{
-    prefix_not
-  | prefix_bit_not
-  | prefix_neg
-  | prefix_yield
-  | prefix_yield_child
-}
-
-infix_op = _{
-    infix_add
-  | infix_assign_get_cont
-  | infix_sub
-  | infix_mul
-  | infix_div
-  | infix_mod
-  | infix_eq
-  | infix_neq
-  | infix_extends
-  | infix_le
-  | infix_ge
-  | infix_lt
-  | infix_gt
-  | infix_and
-  | infix_or
-  | infix_pipe
-  | infix_bit_or
-  | infix_bit_and
-  | infix_bit_xor
-  | infix_bit_shift_l
-  | infix_bit_shift_r
-  | infix_function
-  | infix_assign
-  | infix_match_equals
-  | infix_assign_slot
-}
-
-postfix_op = _{
-    postfix_bang
-  | postfix_trinary_op
-}
-
-postfix_trinary_op = {
-    "?" ~ NEWLINE* ~ annotated_expr ~ ":" ~ NEWLINE* ~ annotated_expr
 }
 
 // ========== Expressions ==========
