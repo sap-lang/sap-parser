@@ -11,11 +11,10 @@ normal_id = @{ start ~ continue* | "_" ~ continue+ }
 macro_id  = @{ "@" ~ normal_id }
 id        =  { normal_id | macro_id | magic_fn_id }
 
-prefix_not         = @{ "!" }
-prefix_neg         = @{ "-" }
-prefix_yield       = @{ "<-" }
-prefix_yield_child = @{ "<<-" }
-prefix_bit_not     = @{ "~" }
+prefix_not     = @{ "!" }
+prefix_neg     = @{ "-" }
+prefix_yield   = @{ "<-" }
+prefix_bit_not = @{ "~" }
 
 infix_add         = @{ "+" }
 infix_sub         = @{ "-" }
@@ -37,16 +36,13 @@ infix_bit_shift_l = @{ "<<" }
 infix_bit_shift_r = @{ ">>" }
 infix_extends     = @{ "<:" }
 // sugar for function application
-infix_function    = ${ "~" ~ id ~ "~" }
-infix_assign          = @{ "=" }
-infix_match_equals    = @{ "?=" }
-infix_assign_slot     = @{ "::=" }
-infix_assign_get_cont =  { "->" ~ id ~ "=" }
-infix_assign_get_cont_match_equals = { "->" ~ id ~ "?=" }
-// sugar for function application
-infix_pipe            = @{ "|>" }
-// sugar a $ f 1 2 = ^{ f : g } ?= a ? g a 1 2 : f a 1 2
-infix_find_and_call_with_this = @{"$"}
+infix_function     = ${ "~" ~ id ~ "~" }
+infix_assign       = @{ "=" }
+infix_match_equals = @{ "?=" }
+infix_assign_slot  = @{ "::=" }
+// infix_assign_get_cont              =  { "->" ~ id ~ "=" }
+// infix_assign_get_cont_match_equals =  { "->" ~ id ~ "?=" }
+infix_assign_yield = @{ "=<=" }
 
 postfix_bang = @{ "!" ~ !"=" }
 
@@ -80,57 +76,50 @@ magic_fn_id = @{
 // ========== Operators ==========
 
 prefix_op = _{
-  prefix_not
-| prefix_bit_not
-| prefix_neg
-| prefix_yield
-| prefix_yield_child
+    prefix_not
+  | prefix_bit_not
+  | prefix_neg
+  | prefix_yield
 }
 
 infix_op = _{
-  infix_add
-| infix_assign_get_cont
-| infix_assign_get_cont_match_equals
-| infix_find_and_call_with_this
-| infix_sub
-| infix_mul
-| infix_div
-| infix_mod
-| infix_eq
-| infix_neq
-| infix_extends
-| infix_le
-| infix_ge
-| infix_lt
-| infix_gt
-| infix_and
-| infix_or
-| infix_pipe
-| infix_bit_or
-| infix_bit_and
-| infix_bit_xor
-| infix_bit_shift_l
-| infix_bit_shift_r
-| infix_function
-| infix_assign
-| infix_match_equals
-| infix_assign_slot
+    infix_add // | infix_assign_get_cont
+  // | infix_assign_get_cont_match_equals
+  | infix_assign_yield
+  | infix_sub
+  | infix_mul
+  | infix_div
+  | infix_mod
+  | infix_eq
+  | infix_neq
+  | infix_extends
+  | infix_le
+  | infix_ge
+  | infix_lt
+  | infix_gt
+  | infix_and
+  | infix_or
+  | infix_bit_or
+  | infix_bit_and
+  | infix_bit_xor
+  | infix_bit_shift_l
+  | infix_bit_shift_r
+  | infix_function
+  | infix_assign
+  | infix_match_equals
+  | infix_assign_slot
 }
 
 postfix_op = _{
-  postfix_bang
-| postfix_trinary_op
+    postfix_bang
+  | postfix_trinary_op
 }
 
 postfix_trinary_op = {
-  "?" ~ NEWLINE* ~ annotated_expr ~ ":" ~ NEWLINE* ~ annotated_expr
+    "?" ~ NEWLINE* ~ annotated_expr ~ ":" ~ NEWLINE* ~ annotated_expr
 }
 
 // ========== Literals ==========
-// ----- regex -----
-regex          = _{ "/" ~ !"*"+ ~ regex_inner ~ "/" }
-regex_inner    = ${ (regex_fragment | escaped_string_fragment)* }
-regex_fragment = @{ (!("/" | "\\") ~ ANY)+ }
 
 // ----- string -----
 // https://en.wikipedia.org/wiki/Escape_sequences_in_C
@@ -140,21 +129,15 @@ escaped_string_fragment = @{
 
 // ----- normal string -----
 
-normal_string          = _{ "\"" ~ normal_string_inner ~ "\"" }
-normal_string_inner    = ${ (normal_string_fragment | escaped_string_fragment)* }
-normal_string_fragment = @{ (!("\"" | "\\" | NEWLINE) ~ ANY)+ }
-
-// ----- multiline string -----
-
-multiline_string          = _{ "`" ~ multiline_string_inner ~ "`" }
-multiline_string_inner    = ${ (multiline_string_fragment | escaped_string_fragment)* }
-multiline_string_fragment = @{ (!("`" | "\\") ~ ANY)+ }
+normal_string          = @{ "\"" ~ normal_string_inner* ~ "\"" }
+normal_string_inner    = ${ normal_string_fragment | escaped_string_fragment }
+normal_string_fragment = @{ (!("\"" | "\\") ~ ANY)+ }
 
 // ----- raw string -----
 
 // push the number signs onto the stack
 // match a quotation mark and the number signs
-raw_string = _{
+raw_string = ${
     "r" ~ PUSH("#"*) ~ "\"" ~ raw_string_inner ~ "\"" ~ POP
 }
 
@@ -165,43 +148,42 @@ raw_string_inner = @{
     (!("\"" ~ PEEK) ~ ANY)*
 }
 
-string = _{ normal_string | multiline_string | raw_string }
+string = _{ normal_string | raw_string }
 
 // ----- number -----
-
-exponent_part = { ("e" | "E") ~ ("-" | "+")? ~ int }
 
 bin_int = @{ ("0b" | "0B") ~ ASCII_BIN_DIGIT ~ ("_"? ~ ASCII_BIN_DIGIT)* }
 oct_int = @{ ("0o" | "0O") ~ ASCII_OCT_DIGIT ~ ("_"? ~ ASCII_OCT_DIGIT)* }
 hex_int = @{ ("0x" | "0X") ~ ASCII_HEX_DIGIT ~ ("_"? ~ ASCII_HEX_DIGIT)* }
 dec_int = @{ ASCII_DIGIT ~ ("_"? ~ ASCII_DIGIT)* }
 
-int = _{
+int = {
     bin_int
   | oct_int
   | hex_int
   | dec_int
 }
 
-bigint = { int ~ "n" }
+// bigint = { int ~ "n" }
 
-float1 = { int ~ exponent_part }
-float2 = { int ~ "." ~ int ~ exponent_part? }
-float3 = { "." ~ int ~ exponent_part? }
-float  = {
+exponent_part = { ("e" | "E") ~ ("-" | "+")? ~ int }
+float1        = { int ~ exponent_part }
+float2        = { int ~ "." ~ int ~ exponent_part? }
+float3        = { "." ~ int ~ exponent_part? }
+float         = {
     float1
   | float2
   | float3
 }
 
-number = { float | bigint | int }
+number = { float | int }
 
 // ----- boolean -----
 
 boolean_true  = @{ "true" }
 boolean_false = @{ "false" }
 
-boolean = _{ boolean_true | boolean_false }
+boolean = { boolean_true | boolean_false }
 
 // ----- array literal -----
 array_body    = _{ annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
@@ -210,32 +192,31 @@ array_literal =  {
 }
 
 // ----- object literal -----
-object_elem_kv =  { annotated_expr ~ ":" ~ NEWLINE* ~ annotated_expr | id | literal }
+object_key     =  { id | string }
+annotated_key  =  { annotation? ~ object_key }
+object_elem    =  { annotated_key ~ ":" ~ NEWLINE* ~ annotated_expr }
+object_elem_kv =  { object_elem | annotated_key }
 object_body    = _{ object_elem_kv ~ ("," ~ NEWLINE* ~ object_elem_kv)* }
 object_literal =  {
     "{" ~ NEWLINE* ~ object_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "}"
 }
 
 // ----- other -----
-null      = { "null" }
-undefined = { "undefined" }
-void      = { "(" ~ ")" }
-slot      = { "<>" }
+// null      = { "null" }
+void = { "(" ~ ")" }
+// slot      = { "<>" }
 
 // ----- sum ------
 
 literal = {
     string
-  | regex
   | number
   | boolean
-  | array_literal
-  | object_literal
-  | void
-  | null
-  | undefined
-  | slot
+  | void // | null
+  // | slot
 }
+
+compound_literal = { array_literal | object_literal | literal }
 
 // ========== Patterns ==========
 
@@ -245,7 +226,7 @@ array_pattern_elem =  { pattern | eclipse_pattern }
 array_pattern_body = _{ array_pattern_elem ~ ("," ~ NEWLINE* ~ array_pattern_elem)* }
 array_pattern      =  { "^[" ~ NEWLINE* ~ array_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "]" }
 
-object_pattern_elem =  { (id | string) ~ ":" ~ NEWLINE* ~ pattern | id | eclipse_pattern }
+object_pattern_elem =  { object_key ~ ":" ~ NEWLINE* ~ pattern | id | eclipse_pattern }
 object_pattern_body = _{ object_pattern_elem ~ ("," ~ NEWLINE* ~ object_pattern_elem)* }
 object_pattern      =  { "^{" ~ NEWLINE* ~ object_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "}" }
 
@@ -271,26 +252,26 @@ no_param_lambda_expr = { "_{" ~ next_stmt* ~ annotated_expr ~ (next_stmt+ ~ anno
 lambda_expr = { no_param_lambda_expr | tr_lambda }
 // ----- quotations -----
 
-paren_expr = _{ "(" ~ annotated_expr ~ ")" }
-block      =  { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ next_stmt* ~ "}" }
+paren_expr = { "(" ~ annotated_expr ~ ")" }
+block      = { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ next_stmt* ~ "}" }
 
 // ----- chain -----
 
 c_params_body = _{ annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
 
-
-index         =  { "[" ~ annotated_expr ~ "]" }
-slice         =  { "[" ~ #from = annotated_expr? ~ ":" ~ #to = annotated_expr? ~ (":" ~ #step = annotated_expr?)? ~ "]" }
-access        =  { "." ~ id }
-c_app_params  =  {
-    "(" ~ NEWLINE* ~ c_params_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ ")"
+index         = { "[" ~ annotated_expr ~ "]" }
+slice         = { "[" ~ #from = annotated_expr? ~ ":" ~ #to = annotated_expr? ~ (":" ~ #step = annotated_expr?)? ~ "]" }
+access        = { "." ~ id }
+c_app_params  = {
+    "(" ~ NEWLINE* ~ c_params_body ~ NEWLINE* ~ ","? ~ NEWLINE* ~ ")"
+  | "(" ~ NEWLINE* ~ "," ~ NEWLINE* ~ ")"
 }
-chain_op      =  { slice | index | access | c_app_params }
-chain_operand = _{
+chain_op      = { slice | index | access | c_app_params }
+chain_operand = {
     block
   | lambda_expr
   | paren_expr
-  | literal
+  | compound_literal
   | id
 }
 
@@ -300,14 +281,20 @@ op_expr = _{ chain_operand ~ chain_op* }
 primary = { op_expr | pattern }
 expr    = { prefix_op* ~ primary ~ postfix_op* ~ (infix_op ~ NEWLINE* ~ prefix_op* ~ primary ~ postfix_op*)* }
 
-param    =  { expr }
-ml_app      =  { expr ~ param+ }
-ml_app_expr = _{ ml_app | expr }
+param       = { expr }
+ml_app      = { op_expr ~ param+ }
+ml_app_expr = { ml_app | expr }
 
-annotation_body = _{ macro_id ~ ("(" ~ expr ~ ")")? }
-annotation      =  { "@" ~ annotation_body }
-annotated_expr  =  { annotation* ~ ml_app_expr }
+// sugar for function application
+infix_pipe = @{ "|>" }
+// sugar a $ f 1 2 = ^{ f : g } ?= a ? g a 1 2 : f a 1 2
+infix_find_and_call_with_this = @{ "$" }
+pipe_sugar                    =  { infix_pipe | infix_find_and_call_with_this }
 
+pipe_expr       =  { ml_app_expr ~ (pipe_sugar ~ NEWLINE* ~ ml_app_expr)* }
+annotation_body = !{ macro_id ~ (pipe_expr)? }
+annotation      = ${ "@" ~ annotation_body ~ NEWLINE }
+annotated_expr  =  { annotation* ~ pipe_expr }
 
 // ========== FINAL ==========
 
