@@ -85,6 +85,7 @@ prefix_op = _{
 infix_op = _{
     infix_add // | infix_assign_get_cont
   // | infix_assign_get_cont_match_equals
+
   | infix_assign_yield
   | infix_sub
   | infix_mul
@@ -148,7 +149,7 @@ raw_string_inner = @{
     (!("\"" ~ PEEK) ~ ANY)*
 }
 
-string = _{ normal_string | raw_string }
+string = { normal_string | raw_string }
 
 // ----- number -----
 
@@ -223,11 +224,12 @@ compound_literal = { array_literal | object_literal | literal }
 eclipse_pattern = ${ "..." ~ id }
 
 array_pattern_elem =  { pattern | eclipse_pattern }
-array_pattern_body = _{ array_pattern_elem ~ ("," ~ NEWLINE* ~ array_pattern_elem)* }
+array_pattern_body = { array_pattern_elem ~ ("," ~ NEWLINE* ~ array_pattern_elem)* }
 array_pattern      =  { "^[" ~ NEWLINE* ~ array_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "]" }
 
-object_pattern_elem =  { object_key ~ ":" ~ NEWLINE* ~ pattern | id | eclipse_pattern }
-object_pattern_body = _{ object_pattern_elem ~ ("," ~ NEWLINE* ~ object_pattern_elem)* }
+object_pattern_kv   =  { object_key ~ (":" ~ NEWLINE* ~ pattern)? }
+object_pattern_elem =  { object_pattern_kv | eclipse_pattern }
+object_pattern_body = { object_pattern_elem ~ ("," ~ NEWLINE* ~ object_pattern_elem)* }
 object_pattern      =  { "^{" ~ NEWLINE* ~ object_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "}" }
 
 macro_pattern = { macro_id ~ pattern }

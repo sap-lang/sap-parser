@@ -6,12 +6,16 @@ use crate::Rule;
 
 fn helper_parse_int(str: &str) -> i64 {
     let str = str.replace("_", "");
-    let prefix = &str[0..2];
-    match prefix {
-        "0x" | "0X" => i64::from_str_radix(&str[2..], 16).unwrap(),
-        "0b" | "0B" => i64::from_str_radix(&str[2..], 2).unwrap(),
-        "0o" | "0O" => i64::from_str_radix(&str[2..], 8).unwrap(),
-        _ => str.parse::<i64>().unwrap(),
+    if str.len() > 2 {
+        let prefix = &str[0..2];
+        match prefix {
+            "0x" | "0X" => i64::from_str_radix(&str[2..], 16).unwrap(),
+            "0b" | "0B" => i64::from_str_radix(&str[2..], 2).unwrap(),
+            "0o" | "0O" => i64::from_str_radix(&str[2..], 8).unwrap(),
+            _ => str.parse::<i64>().unwrap(),
+        }
+    } else {
+        str.parse::<i64>().unwrap()
     }
 }
 

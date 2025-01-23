@@ -171,6 +171,15 @@ pub enum SapString {
     RawString(RawString),
 }
 
+impl SapString {
+    pub fn value(&self) -> String {
+        match self {
+            SapString::NormalString(normal_string) => normal_string.value(),
+            SapString::RawString(raw_string) => raw_string.inner.value.clone(),
+        }
+    }
+}
+
 impl PartialEq for SapString {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
