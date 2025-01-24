@@ -187,18 +187,17 @@ boolean_false = @{ "false" }
 boolean = { boolean_true | boolean_false }
 
 // ----- array literal -----
-array_body    = _{ annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
-array_literal =  {
+array_body    =  { annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
+array_literal = _{
     "[" ~ NEWLINE* ~ array_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "]"
 }
 
 // ----- object literal -----
-object_key     =  { id | string }
-annotated_key  =  { annotation? ~ object_key }
-object_elem    =  { annotated_key ~ ":" ~ NEWLINE* ~ annotated_expr }
-object_elem_kv =  { object_elem | annotated_key }
-object_body    = _{ object_elem_kv ~ ("," ~ NEWLINE* ~ object_elem_kv)* }
-object_literal =  {
+object_key = { id | string }
+// annotated_key  =  { annotation? ~ object_key }
+object_elem_kv =  { object_key ~ (":" ~ NEWLINE* ~ annotated_expr)? }
+object_body    =  { object_elem_kv ~ ("," ~ NEWLINE* ~ object_elem_kv)* }
+object_literal = _{
     "{" ~ NEWLINE* ~ object_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "}"
 }
 
@@ -223,14 +222,14 @@ compound_literal = { array_literal | object_literal | literal }
 
 eclipse_pattern = ${ "..." ~ id }
 
-array_pattern_elem =  { pattern | eclipse_pattern }
+array_pattern_elem = { pattern | eclipse_pattern }
 array_pattern_body = { array_pattern_elem ~ ("," ~ NEWLINE* ~ array_pattern_elem)* }
-array_pattern      =  { "^[" ~ NEWLINE* ~ array_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "]" }
+array_pattern      = { "^[" ~ NEWLINE* ~ array_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "]" }
 
-object_pattern_kv   =  { object_key ~ (":" ~ NEWLINE* ~ pattern)? }
-object_pattern_elem =  { object_pattern_kv | eclipse_pattern }
+object_pattern_kv   = { object_key ~ (":" ~ NEWLINE* ~ pattern)? }
+object_pattern_elem = { object_pattern_kv | eclipse_pattern }
 object_pattern_body = { object_pattern_elem ~ ("," ~ NEWLINE* ~ object_pattern_elem)* }
-object_pattern      =  { "^{" ~ NEWLINE* ~ object_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "}" }
+object_pattern      = { "^{" ~ NEWLINE* ~ object_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "}" }
 
 macro_pattern = { macro_id ~ pattern }
 
@@ -259,17 +258,17 @@ block      = { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* 
 
 // ----- chain -----
 
-c_params_body = _{ annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
+c_params_body = { annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
 
-index         = { "[" ~ annotated_expr ~ "]" }
-slice         = { "[" ~ #from = annotated_expr? ~ ":" ~ #to = annotated_expr? ~ (":" ~ #step = annotated_expr?)? ~ "]" }
-access        = { "." ~ id }
-c_app_params  = {
+index         =  { "[" ~ annotated_expr ~ "]" }
+slice         =  { "[" ~ annotated_expr? ~ ":" ~ annotated_expr? ~ (":" ~ annotated_expr?)? ~ "]" }
+access        =  { "." ~ id }
+c_app_params  = _{
     "(" ~ NEWLINE* ~ c_params_body ~ NEWLINE* ~ ","? ~ NEWLINE* ~ ")"
   | "(" ~ NEWLINE* ~ "," ~ NEWLINE* ~ ")"
 }
-chain_op      = { slice | index | access | c_app_params }
-chain_operand = {
+chain_op      =  { slice | index | access | c_app_params }
+chain_operand =  {
     block
   | lambda_expr
   | paren_expr
@@ -277,14 +276,13 @@ chain_operand = {
   | id
 }
 
-op_expr = _{ chain_operand ~ chain_op* }
+op_expr = { chain_operand ~ chain_op* }
 
 // ----- expr -----
 primary = { op_expr | pattern }
 expr    = { prefix_op* ~ primary ~ postfix_op* ~ (infix_op ~ NEWLINE* ~ prefix_op* ~ primary ~ postfix_op*)* }
 
-param       = { expr }
-ml_app      = { op_expr ~ param+ }
+ml_app      = { op_expr ~ expr+ }
 ml_app_expr = { ml_app | expr }
 
 // sugar for function application
@@ -297,6 +295,16 @@ pipe_expr       =  { ml_app_expr ~ (pipe_sugar ~ NEWLINE* ~ ml_app_expr)* }
 annotation_body = !{ macro_id ~ (pipe_expr)? }
 annotation      = ${ "@" ~ annotation_body ~ NEWLINE }
 annotated_expr  =  { annotation* ~ pipe_expr }
+
+// @@comment "comment"
+// comment = {("//" ~ ANY* ~ NEWLINE)+}
+
+// @@doc "doc_comment"
+// doc_comment = {("///" ~ ANY* ~ NEWLINE)+}
+
+// @@module "module_comment"
+// ()
+// module_comment = {("//!" ~ ANY* ~ NEWLINE)+}
 
 // ========== FINAL ==========
 
