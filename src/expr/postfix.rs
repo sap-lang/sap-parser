@@ -12,13 +12,17 @@ use super::Expr;
 pub struct CParamsBody(pub Vec<Expr>);
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
-#[pest_ast(rule(Rule::index))]
+#[pest_ast(rule(Rule::postfix_c_app_params))]
+pub struct CAppParams(pub Option<CParamsBody>);
+
+#[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
+#[pest_ast(rule(Rule::postfix_index))]
 pub struct Index {
-    pub index: Box<Expr>,
+    pub postfix_index: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
-#[pest_ast(rule(Rule::slice))]
+#[pest_ast(rule(Rule::postfix_slice))]
 pub struct Slice {
     pub start: Option<Box<Expr>>,
     pub end: Option<Box<Expr>>,
@@ -26,11 +30,11 @@ pub struct Slice {
 }
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
-#[pest_ast(rule(Rule::ml_app_param))]
+#[pest_ast(rule(Rule::postfix_ml_app_param))]
 pub struct MlAppParam(pub Box<Expr>);
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
-#[pest_ast(rule(Rule::access))]
+#[pest_ast(rule(Rule::postfix_access))]
 pub struct Access {
     pub id: Id,
 }
@@ -45,11 +49,11 @@ pub struct Trinary {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum Postfix {
     Trinary(Trinary),
-    Slice(Slice),
-    Index(Index),
+    postfix_slice(Slice),
+    postfix_index(Index),
     Access(Access),
     // these two should not be used in the final AST
-    CAppParams(CParamsBody),
+    CAppParams(CAppParams),
     MlAppParam(MlAppParam),
 }
 
@@ -60,11 +64,11 @@ pub fn parse_postfix(
     let mut pairs = Pairs::single(rule);
     match rrule {
         Rule::postfix_trinary_op => Ok(Postfix::Trinary(Trinary::from_pest(&mut pairs)?)),
-        Rule::slice => Ok(Postfix::Slice(Slice::from_pest(&mut pairs)?)),
-        Rule::index => Ok(Postfix::Index(Index::from_pest(&mut pairs)?)),
-        Rule::access => Ok(Postfix::Access(Access::from_pest(&mut pairs)?)),
-        Rule::c_params_body => Ok(Postfix::CAppParams(CParamsBody::from_pest(&mut pairs)?)),
-        Rule::ml_app_param => Ok(Postfix::MlAppParam(MlAppParam::from_pest(&mut pairs)?)),
+        Rule::postfix_slice => Ok(Postfix::postfix_slice(Slice::from_pest(&mut pairs)?)),
+        Rule::postfix_index => Ok(Postfix::postfix_index(Index::from_pest(&mut pairs)?)),
+        Rule::postfix_access => Ok(Postfix::Access(Access::from_pest(&mut pairs)?)),
+        Rule::postfix_c_app_params => Ok(Postfix::CAppParams(CAppParams::from_pest(&mut pairs)?)),
+        Rule::postfix_ml_app_param => Ok(Postfix::MlAppParam(MlAppParam::from_pest(&mut pairs)?)),
 
         _ => unreachable!(),
     }
@@ -99,29 +103,29 @@ mod tests {
     }
 
     #[test]
-    fn test_index() {
-        let pair = crate::SapParser::parse(Rule::index, "[1]")
+    fn test_postfix_index() {
+        let pair = crate::SapParser::parse(Rule::postfix_index, "[1]")
             .unwrap()
             .next()
             .unwrap();
         let mut pairs = pest::iterators::Pairs::single(pair);
-        let index = super::Index::from_pest(&mut pairs).unwrap();
+        let postfix_index = super::Index::from_pest(&mut pairs).unwrap();
         if let Expr::Primary(Primary::OpExpr(OpExpr::CompoundLiteral(CompoundLiteral::Literal(
             Literal::Number(SapNumber::Int(n)),
-        )))) = *index.index
+        )))) = *postfix_index.postfix_index
         {
             assert_eq!(n.value(), 1);
         }
     }
 
     #[test]
-    fn test_access() {
-        let pair = crate::SapParser::parse(Rule::access, ".a")
+    fn test_postfix_access() {
+        let pair = crate::SapParser::parse(Rule::postfix_access, ".a")
             .unwrap()
             .next()
             .unwrap();
         let mut pairs = pest::iterators::Pairs::single(pair);
-        let access = super::Access::from_pest(&mut pairs).unwrap();
-        assert_eq!(access.id.value(), "a");
+        let postfix_access = super::Access::from_pest(&mut pairs).unwrap();
+        assert_eq!(postfix_access.id.value(), "a");
     }
 }

@@ -10,6 +10,8 @@ static PRATT_PARSER: OnceLock<PrattParser<Rule>> = OnceLock::new();
 pub fn pratt_parser() -> &'static PrattParser<Rule> {
     PRATT_PARSER.get_or_init(|| {
         PrattParser::new()
+            // finally
+            .op(Op::prefix(Rule::prefix_annotative_macro_call))
             // level 18 assign related
             .op(Op::infix(Rule::infix_assign, Assoc::Right)
                 | Op::infix(Rule::infix_assign_yield, Assoc::Right)
@@ -57,10 +59,10 @@ pub fn pratt_parser() -> &'static PrattParser<Rule> {
                 | Op::prefix(Rule::prefix_neg)
                 | Op::prefix(Rule::prefix_bit_not))
             // level 1 postfixes
-            .op(Op::postfix(Rule::ml_app_param))
-            .op(Op::postfix(Rule::slice)
-                | Op::postfix(Rule::index)
-                | Op::postfix(Rule::access)
-                | Op::postfix(Rule::c_app_params))
+            .op(Op::postfix(Rule::postfix_ml_app_param))
+            .op(Op::postfix(Rule::postfix_slice)
+                | Op::postfix(Rule::postfix_index)
+                | Op::postfix(Rule::postfix_access)
+                | Op::postfix(Rule::postfix_c_app_params))
     })
 }

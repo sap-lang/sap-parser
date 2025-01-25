@@ -9,8 +9,8 @@ pub struct GlobalOptions {
 
     pub function_application_style: FunctionApplicationStyle,
 
-    /// transform small index `a["b"]` to `a.b`
-    pub small_index_to_access: bool,
+    /// transform small postfix_index `a["b"]` to `a.b`
+    pub small_postfix_index_to_postfix_access: bool,
 
     /// transform small block `\x -> { x }` to `\x -> x`
     pub small_block_to_inline: bool,

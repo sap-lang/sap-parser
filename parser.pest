@@ -74,6 +74,18 @@ magic_fn_id = @{
   | "(neg)"
 }
 
+prefix_annotative_macro_call = { "@" ~ macro_id ~ ("(" ~ expr ~ ")")? }
+
+c_params_body = { expr ~ ("," ~ NEWLINE* ~ expr)+ ~ NEWLINE* ~ ","? }
+postfix_ml_app_param  = { expr }
+postfix_index         = { "[" ~ expr ~ "]" }
+postfix_slice        = { "[" ~ expr? ~ ":" ~ expr? ~ (":" ~ expr?)? ~ "]" }
+postfix_access       = { "." ~ id }
+postfix_c_app_params = {
+    "(" ~ NEWLINE* ~ c_params_body ~ NEWLINE* ~ ")"
+  | "(" ~ NEWLINE* ~ "," ~ NEWLINE* ~ ")"
+}
+
 // ========== Operators ==========
 
 prefix_op = _{
@@ -81,6 +93,7 @@ prefix_op = _{
   | prefix_bit_not
   | prefix_neg
   | prefix_yield
+  | prefix_annotative_macro_call
 }
 
 infix_op = _{
@@ -114,11 +127,11 @@ infix_op = _{
 
 postfix_op = _{
     postfix_trinary_op
-  | slice
-  | index
-  | access
-  | c_app_params
-  | ml_app_param // 需要后续处理一个church list decode
+  | postfix_slice
+  | postfix_index
+  | postfix_access
+  | postfix_c_app_params
+  | postfix_ml_app_param // 需要后续处理一个church list decode
 }
 
 postfix_trinary_op = {
@@ -261,19 +274,8 @@ lambda_expr = { no_param_lambda_expr | tr_lambda }
 paren_expr = { "(" ~ expr ~ ")" }
 block      = { "{" ~ NEWLINE* ~ expr ~ (next_stmt+ ~ expr)* ~ next_stmt* ~ "}" }
 
-// ----- chain -----
+// ----- expr -----
 
-c_params_body = { expr ~ ("," ~ NEWLINE* ~ expr)+ ~ NEWLINE* ~ ","? }
-ml_app_param  = { expr }
-index         = { "[" ~ expr ~ "]" }
-
-slice        = { "[" ~ expr? ~ ":" ~ expr? ~ (":" ~ expr?)? ~ "]" }
-access       = { "." ~ id }
-c_app_params = {
-    "(" ~ NEWLINE* ~ c_params_body ~ NEWLINE* ~ ")"
-  | "(" ~ NEWLINE* ~ "," ~ NEWLINE* ~ ")"
-}
-// chain_op      =  { slice | index | access | c_app_params }
 op_expr = {
     block
   | lambda_expr
@@ -282,21 +284,10 @@ op_expr = {
   | id
 }
 
-// op_expr = { chain_operand ~ chain_op* }
 
-// ----- expr -----
 primary = { op_expr | pattern }
 expr    = { prefix_op* ~ primary ~ postfix_op* ~ (infix_op ~ NEWLINE* ~ prefix_op* ~ primary ~ postfix_op*)* }
 
-// @comment "comment"\
-// comment = {("//" ~ ANY* ~ NEWLINE)+}
-
-// @doc "doc_comment"\
-// doc_comment = {("///" ~ ANY* ~ NEWLINE)+}
-
-// @module "module_comment"\
-// ()
-// module_comment = {("//!" ~ ANY* ~ NEWLINE)+}
 
 // ========== FINAL ==========
 

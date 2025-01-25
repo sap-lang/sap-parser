@@ -70,7 +70,11 @@ impl FromPest<'_> for Expr {
                 if let Postfix::MlAppParam(p) = postfix {
                     Ok(handle_expr_church_encoded(expr, p))
                 } else if let Postfix::CAppParams(p) = postfix {
-                    Ok(handle_expr_lift_c_params(expr, p))
+                    if let Some(p) = p.0 {
+                        Ok(handle_expr_lift_c_params(expr, p))
+                    } else {
+                        Ok(Expr::CApply(Box::new(expr), vec![]))
+                    }
                 } else {
                     Ok(Expr::Postfix(postfix, Box::new(expr)))
                 }
@@ -106,7 +110,16 @@ mod tests {
         let expr = Expr::from_pest(&mut pairs).unwrap();
         println!("{:#?}", expr);
     }
-
+    #[test]
+    fn test_expr_capp() {
+        let pair = crate::SapParser::parse(Rule::expr, "a(b,c)")
+            .unwrap()
+            .next()
+            .unwrap();
+        let mut pairs = pest::iterators::Pairs::single(pair);
+        let expr = Expr::from_pest(&mut pairs).unwrap();
+        println!("{:#?}", expr);
+    }
     #[test]
     fn test_expr_mlapp() {
         let pair = crate::SapParser::parse(Rule::expr, "a b")
@@ -148,6 +161,26 @@ mod tests {
             .unwrap()
             .next()
             .unwrap();
+        let mut pairs = pest::iterators::Pairs::single(pair);
+        let expr = Expr::from_pest(&mut pairs).unwrap();
+
+        println!("{:#?}", expr);
+    }
+
+    #[test]
+    fn test_expr_fn() {
+        let pair = crate::SapParser::parse(
+            Rule::expr,
+            "@@entry \
+main = _{
+    a = 1
+    b = 2
+    a + b |> puts
+}",
+        )
+        .unwrap()
+        .next()
+        .unwrap();
         let mut pairs = pest::iterators::Pairs::single(pair);
         let expr = Expr::from_pest(&mut pairs).unwrap();
 
