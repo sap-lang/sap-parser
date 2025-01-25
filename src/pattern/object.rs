@@ -1,7 +1,7 @@
 use pest_ast::FromPest;
 use serde::Serialize;
 
-use crate::{Rule, literal::ObjectKey};
+use crate::{Rule, literal::object::ObjectKey};
 
 use super::{EclipsePattern, Pattern};
 

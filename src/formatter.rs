@@ -1,9 +1,9 @@
-enum FunctionApplicationStyle {
+pub enum FunctionApplicationStyle {
     CStyle,
     MLStyle,
 }
 
-struct GlobalOptions {
+pub struct GlobalOptions {
     pub indent_size: u32,
     pub screen_width: u32,
 
@@ -36,7 +36,11 @@ pub trait PrettyPrint {
     fn pretty_print(&self, context: &Context, options: &GlobalOptions) -> String;
     /// for list, object, block, if, op,
     /// return None if it can not be multiline
-    fn multiline_pretty_print(&self, context: &Context, options: &GlobalOptions) -> Option<String> {
+    fn multiline_pretty_print(
+        &self,
+        _context: &Context,
+        _options: &GlobalOptions,
+    ) -> Option<String> {
         None
     }
 }

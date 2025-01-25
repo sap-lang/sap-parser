@@ -1,6 +1,6 @@
 // ========== Tokens ==========
 
-WHITESPACE = _{ " " | "\t" }
+WHITESPACE = _{ " " | "\t" | "\\n" }
 
 next_stmt = _{ ";" | NEWLINE+ }
 
@@ -43,8 +43,10 @@ infix_assign_slot  = @{ "::=" }
 // infix_assign_get_cont              =  { "->" ~ id ~ "=" }
 // infix_assign_get_cont_match_equals =  { "->" ~ id ~ "?=" }
 infix_assign_yield = @{ "=<=" }
-
-postfix_bang = @{ "!" ~ !"=" }
+// sugar for function application
+infix_pipe = @{ "|>" }
+// sugar a $ f 1 2 = ^{ f : g } ?= a ? g a 1 2 : f a 1 2
+infix_find_and_call_with_this = @{ "$" }
 
 magic_fn_id = @{
     "(+)"
@@ -70,7 +72,6 @@ magic_fn_id = @{
   | "([])"
   | "([::])"
   | "(neg)"
-  | "(bang)"
 }
 
 // ========== Operators ==========
@@ -83,9 +84,7 @@ prefix_op = _{
 }
 
 infix_op = _{
-    infix_add // | infix_assign_get_cont
-  // | infix_assign_get_cont_match_equals
-
+    infix_add
   | infix_assign_yield
   | infix_sub
   | infix_mul
@@ -99,6 +98,8 @@ infix_op = _{
   | infix_lt
   | infix_gt
   | infix_and
+  | infix_pipe
+  | infix_find_and_call_with_this
   | infix_or
   | infix_bit_or
   | infix_bit_and
@@ -112,12 +113,16 @@ infix_op = _{
 }
 
 postfix_op = _{
-    postfix_bang
-  | postfix_trinary_op
+    postfix_trinary_op
+  | slice
+  | index
+  | access
+  | c_app_params
+  | ml_app_param // 需要后续处理一个church list decode
 }
 
 postfix_trinary_op = {
-    "?" ~ NEWLINE* ~ annotated_expr ~ ":" ~ NEWLINE* ~ annotated_expr
+    "?" ~ NEWLINE* ~ expr ~ ":" ~ NEWLINE* ~ expr
 }
 
 // ========== Literals ==========
@@ -187,7 +192,7 @@ boolean_false = @{ "false" }
 boolean = { boolean_true | boolean_false }
 
 // ----- array literal -----
-array_body    =  { annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
+array_body    =  { expr ~ ("," ~ NEWLINE* ~ expr)* }
 array_literal = _{
     "[" ~ NEWLINE* ~ array_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "]"
 }
@@ -195,7 +200,7 @@ array_literal = _{
 // ----- object literal -----
 object_key = { id | string }
 // annotated_key  =  { annotation? ~ object_key }
-object_elem_kv =  { object_key ~ (":" ~ NEWLINE* ~ annotated_expr)? }
+object_elem_kv =  { object_key ~ (":" ~ NEWLINE* ~ expr)? }
 object_body    =  { object_elem_kv ~ ("," ~ NEWLINE* ~ object_elem_kv)* }
 object_literal = _{
     "{" ~ NEWLINE* ~ object_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "}"
@@ -246,29 +251,30 @@ pattern = {
 // ----- function -----
 
 implicit_params      = { "?" ~ id+ }
-guard                = { ":" ~ annotated_expr }
-tr_lambda            = { "\\" ~ pattern* ~ implicit_params? ~ guard? ~ "->" ~ annotated_expr }
-no_param_lambda_expr = { "_{" ~ next_stmt* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ next_stmt* ~ "}" }
+guard                = { ":" ~ expr }
+tr_lambda            = { "\\" ~ pattern* ~ implicit_params? ~ guard? ~ "->" ~ expr }
+no_param_lambda_expr = { "_{" ~ next_stmt* ~ expr ~ (next_stmt+ ~ expr)* ~ next_stmt* ~ "}" }
 
 lambda_expr = { no_param_lambda_expr | tr_lambda }
 // ----- quotations -----
 
-paren_expr = { "(" ~ annotated_expr ~ ")" }
-block      = { "{" ~ NEWLINE* ~ annotated_expr ~ (next_stmt+ ~ annotated_expr)* ~ next_stmt* ~ "}" }
+paren_expr = { "(" ~ expr ~ ")" }
+block      = { "{" ~ NEWLINE* ~ expr ~ (next_stmt+ ~ expr)* ~ next_stmt* ~ "}" }
 
 // ----- chain -----
 
-c_params_body = { annotated_expr ~ ("," ~ NEWLINE* ~ annotated_expr)* }
+c_params_body = { expr ~ ("," ~ NEWLINE* ~ expr)+ ~ NEWLINE* ~ ","? }
+ml_app_param  = { expr }
+index         = { "[" ~ expr ~ "]" }
 
-index         =  { "[" ~ annotated_expr ~ "]" }
-slice         =  { "[" ~ annotated_expr? ~ ":" ~ annotated_expr? ~ (":" ~ annotated_expr?)? ~ "]" }
-access        =  { "." ~ id }
-c_app_params  = _{
-    "(" ~ NEWLINE* ~ c_params_body ~ NEWLINE* ~ ","? ~ NEWLINE* ~ ")"
+slice        = { "[" ~ expr? ~ ":" ~ expr? ~ (":" ~ expr?)? ~ "]" }
+access       = { "." ~ id }
+c_app_params = {
+    "(" ~ NEWLINE* ~ c_params_body ~ NEWLINE* ~ ")"
   | "(" ~ NEWLINE* ~ "," ~ NEWLINE* ~ ")"
 }
-chain_op      =  { slice | index | access | c_app_params }
-chain_operand =  {
+// chain_op      =  { slice | index | access | c_app_params }
+op_expr = {
     block
   | lambda_expr
   | paren_expr
@@ -276,38 +282,24 @@ chain_operand =  {
   | id
 }
 
-op_expr = { chain_operand ~ chain_op* }
+// op_expr = { chain_operand ~ chain_op* }
 
 // ----- expr -----
 primary = { op_expr | pattern }
 expr    = { prefix_op* ~ primary ~ postfix_op* ~ (infix_op ~ NEWLINE* ~ prefix_op* ~ primary ~ postfix_op*)* }
 
-ml_app      = { op_expr ~ expr+ }
-ml_app_expr = { ml_app | expr }
-
-// sugar for function application
-infix_pipe = @{ "|>" }
-// sugar a $ f 1 2 = ^{ f : g } ?= a ? g a 1 2 : f a 1 2
-infix_find_and_call_with_this = @{ "$" }
-pipe_sugar                    =  { infix_pipe | infix_find_and_call_with_this }
-
-pipe_expr       =  { ml_app_expr ~ (pipe_sugar ~ NEWLINE* ~ ml_app_expr)* }
-annotation_body = !{ macro_id ~ (pipe_expr)? }
-annotation      = ${ "@" ~ annotation_body ~ NEWLINE }
-annotated_expr  =  { annotation* ~ pipe_expr }
-
-// @@comment "comment"
+// @comment "comment"\
 // comment = {("//" ~ ANY* ~ NEWLINE)+}
 
-// @@doc "doc_comment"
+// @doc "doc_comment"\
 // doc_comment = {("///" ~ ANY* ~ NEWLINE)+}
 
-// @@module "module_comment"
+// @module "module_comment"\
 // ()
 // module_comment = {("//!" ~ ANY* ~ NEWLINE)+}
 
 // ========== FINAL ==========
 
 file = {
-    SOI ~ next_stmt* ~ (annotated_expr ~ (next_stmt+ ~ annotated_expr)*)? ~ next_stmt* ~ EOI
+    SOI ~ next_stmt* ~ (expr ~ (next_stmt+ ~ expr)*)? ~ next_stmt* ~ EOI
 }

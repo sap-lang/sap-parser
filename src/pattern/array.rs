@@ -29,11 +29,15 @@ mod tests {
     use from_pest::FromPest;
     use pest::Parser;
 
-    use crate::{Rule, pattern::array::ArrayPatternElem};
+    use super::*;
+    use crate::{
+        Rule, SapParser,
+        id::{Id, NormalId},
+    };
 
     #[test]
     fn test_array_pattern_elem() {
-        let pair = crate::SapParser::parse(Rule::array_pattern_elem, "...a")
+        let pair = SapParser::parse(Rule::array_pattern_elem, "...a")
             .unwrap()
             .next()
             .unwrap();
@@ -41,8 +45,8 @@ mod tests {
             ArrayPatternElem::from_pest(&mut pest::iterators::Pairs::single(pair)).unwrap();
         assert_eq!(
             array_pattern_elem,
-            ArrayPatternElem::EclipsePattern(crate::pattern::EclipsePattern {
-                value: crate::Id::NormalId(crate::NormalId {
+            ArrayPatternElem::EclipsePattern(EclipsePattern {
+                value: Id::NormalId(NormalId {
                     value: "a".to_string()
                 })
             })
@@ -51,27 +55,25 @@ mod tests {
 
     #[test]
     fn test_array_pattern_body() {
-        let pair = crate::SapParser::parse(Rule::array_pattern_body, "...a, ...b")
+        let pair = SapParser::parse(Rule::array_pattern_body, "...a, ...b")
             .unwrap()
             .next()
             .unwrap();
-        let array_pattern_body = crate::pattern::array::ArrayPatternBody::from_pest(
-            &mut pest::iterators::Pairs::single(pair),
-        )
-        .unwrap();
+        let array_pattern_body =
+            ArrayPatternBody::from_pest(&mut pest::iterators::Pairs::single(pair)).unwrap();
         assert_eq!(array_pattern_body.elems.len(), 2);
         assert_eq!(
             array_pattern_body.elems[0],
-            ArrayPatternElem::EclipsePattern(crate::pattern::EclipsePattern {
-                value: crate::Id::NormalId(crate::NormalId {
+            ArrayPatternElem::EclipsePattern(EclipsePattern {
+                value: Id::NormalId(NormalId {
                     value: "a".to_string()
                 })
             })
         );
         assert_eq!(
             array_pattern_body.elems[1],
-            ArrayPatternElem::EclipsePattern(crate::pattern::EclipsePattern {
-                value: crate::Id::NormalId(crate::NormalId {
+            ArrayPatternElem::EclipsePattern(EclipsePattern {
+                value: Id::NormalId(NormalId {
                     value: "b".to_string()
                 })
             })
@@ -80,7 +82,7 @@ mod tests {
 
     #[test]
     fn test_array_pattern() {
-        let pair = crate::SapParser::parse(
+        let pair = SapParser::parse(
             Rule::array_pattern,
             "^[...a, 
         ...b]",
@@ -88,23 +90,21 @@ mod tests {
         .unwrap()
         .next()
         .unwrap();
-        let array_pattern = crate::pattern::array::ArrayPattern::from_pest(
-            &mut pest::iterators::Pairs::single(pair),
-        )
-        .unwrap();
+        let array_pattern =
+            ArrayPattern::from_pest(&mut pest::iterators::Pairs::single(pair)).unwrap();
         assert_eq!(array_pattern.body.elems.len(), 2);
         assert_eq!(
             array_pattern.body.elems[0],
-            ArrayPatternElem::EclipsePattern(crate::pattern::EclipsePattern {
-                value: crate::Id::NormalId(crate::NormalId {
+            ArrayPatternElem::EclipsePattern(EclipsePattern {
+                value: Id::NormalId(NormalId {
                     value: "a".to_string()
                 })
             })
         );
         assert_eq!(
             array_pattern.body.elems[1],
-            ArrayPatternElem::EclipsePattern(crate::pattern::EclipsePattern {
-                value: crate::Id::NormalId(crate::NormalId {
+            ArrayPatternElem::EclipsePattern(EclipsePattern {
+                value: Id::NormalId(NormalId {
                     value: "b".to_string()
                 })
             })

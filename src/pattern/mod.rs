@@ -7,7 +7,11 @@ use object::ObjectPattern;
 use pest_ast::FromPest;
 use serde::Serialize;
 
-use crate::{Id, MacroId, Rule, literal::Literal};
+use crate::{
+    Rule,
+    id::{Id, MacroId, NormalId},
+    literal::Literal,
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct EclipsePattern {
@@ -25,7 +29,7 @@ impl FromPest<'_> for EclipsePattern {
         let pair = pest.next().unwrap();
         let str = pair.as_str();
         Ok(EclipsePattern {
-            value: Id::NormalId(crate::NormalId {
+            value: Id::NormalId(NormalId {
                 value: str[3..].to_string(),
             }),
         })
