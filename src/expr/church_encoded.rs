@@ -46,7 +46,7 @@ fn handle_postfix_trinary(expr: Expr, pe: Box<Expr>) -> Option<Expr> {
         }
         Expr::Postfix(Postfix::Trinary(t), c) => Some(Expr::Postfix(
             Postfix::Trinary(t),
-            Box::new(Expr::MLApply(Box::new(expr), vec![*c])),
+            Box::new(handle_expr_church_encoded(expr, MlAppParam(c))),
         )),
         _ => None,
     }

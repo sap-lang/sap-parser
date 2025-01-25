@@ -66,7 +66,6 @@ impl FromPest<'_> for Expr {
             .map_postfix(|expr, postfix| {
                 let expr = expr?;
                 let postfix = parse_postfix(postfix)?;
-                println!("postfix: {:#?}\n\n", postfix);
                 // expand church encoded ml_param
                 if let Postfix::MlAppParam(p) = postfix {
                     Ok(handle_expr_church_encoded(expr, p))
@@ -78,11 +77,9 @@ impl FromPest<'_> for Expr {
             })
             .map_infix(|lhs, infix, rhs| {
                 let lhs = lhs?;
-                println!("ll: {:#?}\n\n", lhs);
                 let mut pairs = pest::iterators::Pairs::single(infix);
                 let infix = Infix::from_pest(&mut pairs)?;
                 let rhs = rhs?;
-                println!("rr: {:#?}\n\n", rhs);
 
                 Ok(Expr::Infix(infix, Box::new(lhs), Box::new(rhs)))
             })
@@ -120,6 +117,7 @@ mod tests {
         let expr = Expr::from_pest(&mut pairs).unwrap();
         println!("{:#?}", expr);
     }
+
     #[test]
     fn test_expr_mlapp_infix() {
         let pair = crate::SapParser::parse(Rule::expr, "a b + a c + b c")
@@ -131,6 +129,7 @@ mod tests {
         // (a b c) + 1
         println!("{:#?}", expr);
     }
+
     #[test]
     fn test_expr_mlapp_trinary() {
         let pair = crate::SapParser::parse(Rule::expr, "a b c ? 1 : 2")
@@ -142,16 +141,16 @@ mod tests {
         // (a b c) ? 1 : 2
         println!("{:#?}", expr);
     }
+
     #[test]
     fn test_expr_mlapp_infix_and_trinary() {
-        let pair = crate::SapParser::parse(Rule::expr, "a b + 1 ? 1 : 2")
+        let pair = crate::SapParser::parse(Rule::expr, "a b + c ? 1 : 2")
             .unwrap()
             .next()
             .unwrap();
         let mut pairs = pest::iterators::Pairs::single(pair);
         let expr = Expr::from_pest(&mut pairs).unwrap();
 
-        // FIXME: should be ((a b) + c)) ? 1 : 2
         println!("{:#?}", expr);
     }
 }
