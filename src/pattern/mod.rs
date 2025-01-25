@@ -54,7 +54,7 @@ pub enum Pattern {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use from_pest::FromPest;
     use pest::Parser;
 

@@ -51,4 +51,37 @@ mod tests {
         let object_key = super::ObjectKey::from_pest(&mut pairs).unwrap();
         assert_eq!(object_key.value(), "a");
     }
+
+    #[test]
+    fn test_object_elem_kv() {
+        let pair = crate::SapParser::parse(Rule::object_elem_kv, "a: 1")
+            .unwrap()
+            .next()
+            .unwrap();
+        let mut pairs = pest::iterators::Pairs::single(pair);
+        let object_elem_kv = super::ObjectElemKv::from_pest(&mut pairs).unwrap();
+        assert_eq!(object_elem_kv.key.value(), "a");
+    }
+
+    #[test]
+    fn test_object_elem_kv_only_k() {
+        let pair = crate::SapParser::parse(Rule::object_elem_kv, "a")
+            .unwrap()
+            .next()
+            .unwrap();
+        let mut pairs = pest::iterators::Pairs::single(pair);
+        let object_elem_kv = super::ObjectElemKv::from_pest(&mut pairs).unwrap();
+        assert_eq!(object_elem_kv.key.value(), "a");
+    }
+
+    #[test]
+    fn test_object_body() {
+        let pair = crate::SapParser::parse(Rule::object_body, "a: 1, b")
+            .unwrap()
+            .next()
+            .unwrap();
+        let mut pairs = pest::iterators::Pairs::single(pair);
+        let object_body = super::ObjectBody::from_pest(&mut pairs).unwrap();
+        assert_eq!(object_body.body.len(), 2);
+    }
 }

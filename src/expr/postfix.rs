@@ -49,8 +49,8 @@ pub struct Trinary {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum Postfix {
     Trinary(Trinary),
-    postfix_slice(Slice),
-    postfix_index(Index),
+    Slice(Slice),
+    Index(Index),
     Access(Access),
     // these two should not be used in the final AST
     CAppParams(CAppParams),
@@ -64,8 +64,8 @@ pub fn parse_postfix(
     let mut pairs = Pairs::single(rule);
     match rrule {
         Rule::postfix_trinary_op => Ok(Postfix::Trinary(Trinary::from_pest(&mut pairs)?)),
-        Rule::postfix_slice => Ok(Postfix::postfix_slice(Slice::from_pest(&mut pairs)?)),
-        Rule::postfix_index => Ok(Postfix::postfix_index(Index::from_pest(&mut pairs)?)),
+        Rule::postfix_slice => Ok(Postfix::Slice(Slice::from_pest(&mut pairs)?)),
+        Rule::postfix_index => Ok(Postfix::Index(Index::from_pest(&mut pairs)?)),
         Rule::postfix_access => Ok(Postfix::Access(Access::from_pest(&mut pairs)?)),
         Rule::postfix_c_app_params => Ok(Postfix::CAppParams(CAppParams::from_pest(&mut pairs)?)),
         Rule::postfix_ml_app_param => Ok(Postfix::MlAppParam(MlAppParam::from_pest(&mut pairs)?)),

@@ -59,7 +59,7 @@ pub enum CompoundLiteral {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use from_pest::FromPest;
     use pest::Parser;
 
