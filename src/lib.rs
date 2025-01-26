@@ -10,6 +10,7 @@ pub mod literal;
 pub mod operator_precedence;
 pub mod pattern;
 pub mod quotations;
+pub mod diagnostics;
 
 use from_pest::FromPest;
 use pest::Parser;
