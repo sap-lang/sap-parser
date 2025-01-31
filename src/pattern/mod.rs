@@ -2,38 +2,20 @@ pub mod array;
 pub mod object;
 
 use array::ArrayPattern;
-use from_pest::FromPest;
 use object::ObjectPattern;
 use pest_ast::FromPest;
 use serde::Serialize;
 
 use crate::{
     Rule,
-    id::{Id, MacroId, NormalId},
+    id::{Id, MacroId},
     literal::Literal,
 };
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
+#[pest_ast(rule(Rule::eclipse_pattern))]
 pub struct EclipsePattern {
     pub value: Id,
-}
-
-impl FromPest<'_> for EclipsePattern {
-    type Rule = Rule;
-
-    type FatalError = from_pest::Void;
-
-    fn from_pest(
-        pest: &mut pest::iterators::Pairs<'_, Self::Rule>,
-    ) -> Result<Self, from_pest::ConversionError<Self::FatalError>> {
-        let pair = pest.next().unwrap();
-        let str = pair.as_str();
-        Ok(EclipsePattern {
-            value: Id::NormalId(NormalId {
-                value: str[3..].to_string(),
-            }),
-        })
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]

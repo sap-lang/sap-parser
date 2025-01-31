@@ -3,6 +3,7 @@
 pub mod formatter;
 pub mod preprocessor;
 
+pub mod diagnostics;
 pub mod expr;
 pub mod function;
 pub mod id;
@@ -10,7 +11,6 @@ pub mod literal;
 pub mod operator_precedence;
 pub mod pattern;
 pub mod quotations;
-pub mod diagnostics;
 
 use from_pest::FromPest;
 use pest::Parser;
