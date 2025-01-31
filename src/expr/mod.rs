@@ -26,8 +26,8 @@ pub enum Primary {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Expr {
-    inner: ExprInner,
-    diag: Diagnostic,
+    pub inner: ExprInner,
+    pub diag: Diagnostic,
 }
 
 impl PartialEq for Expr {
