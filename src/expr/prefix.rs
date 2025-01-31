@@ -48,6 +48,7 @@ mod tests {
 
     use crate::{
         Rule,
+        diagnostics::Diagnostic,
         expr::{Expr, prefix::Prefix},
         id::MacroId,
         literal::number::DecInt,
@@ -106,15 +107,16 @@ mod tests {
                 MacroId {
                     value: "@macro".to_string()
                 },
-                Some(Box::new(Expr::Primary(crate::expr::Primary::OpExpr(
-                    crate::expr::op_expr::OpExpr::CompoundLiteral(
+                Some(Box::new(Expr::Primary(
+                    crate::expr::Primary::OpExpr(crate::expr::op_expr::OpExpr::CompoundLiteral(
                         crate::literal::CompoundLiteral::Literal(crate::literal::Literal::Number(
                             crate::literal::number::SapNumber::Int(
                                 crate::literal::number::Int::DecInt(DecInt { value: 1 })
                             )
                         ))
-                    )
-                ))))
+                    )),
+                    Diagnostic::test()
+                )))
             )
         )
     }

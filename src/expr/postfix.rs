@@ -81,7 +81,7 @@ mod tests {
 
     use crate::{
         Rule,
-        expr::{Expr, Primary, op_expr::OpExpr},
+        expr::{Expr, ExprInner, Primary, op_expr::OpExpr},
         literal::{CompoundLiteral, Literal, number::SapNumber},
     };
 
@@ -94,9 +94,13 @@ mod tests {
         let mut pairs = pest::iterators::Pairs::single(pair);
         let c_params_body = super::CParamsBody::from_pest(&mut pairs).unwrap();
         assert_eq!(c_params_body.0.len(), 2);
-        if let Expr::Primary(Primary::OpExpr(OpExpr::CompoundLiteral(CompoundLiteral::Literal(
-            Literal::Number(SapNumber::Int(n)),
-        )))) = &c_params_body.0[0]
+        if let Expr {
+            inner:
+                ExprInner::Primary(Primary::OpExpr(OpExpr::CompoundLiteral(CompoundLiteral::Literal(
+                    Literal::Number(SapNumber::Int(n)),
+                )))),
+            diag: _,
+        } = &c_params_body.0[0]
         {
             assert_eq!(n.value(), 1);
         }
@@ -110,9 +114,13 @@ mod tests {
             .unwrap();
         let mut pairs = pest::iterators::Pairs::single(pair);
         let postfix_index = super::Index::from_pest(&mut pairs).unwrap();
-        if let Expr::Primary(Primary::OpExpr(OpExpr::CompoundLiteral(CompoundLiteral::Literal(
-            Literal::Number(SapNumber::Int(n)),
-        )))) = *postfix_index.postfix_index
+        if let Expr {
+            inner:
+                ExprInner::Primary(Primary::OpExpr(OpExpr::CompoundLiteral(CompoundLiteral::Literal(
+                    Literal::Number(SapNumber::Int(n)),
+                )))),
+            diag: _,
+        } = *postfix_index.postfix_index
         {
             assert_eq!(n.value(), 1);
         }

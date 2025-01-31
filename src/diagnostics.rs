@@ -35,4 +35,15 @@ impl Diagnostic {
             end_offset,
         }
     }
+
+    pub fn test() -> Self {
+        Diagnostic {
+            start_line: 0,
+            start_col: 0,
+            start_offset: 0,
+            end_line: 0,
+            end_col: 0,
+            end_offset: 0,
+        }
+    }
 }

@@ -9,12 +9,13 @@ pub use church_encoded::*;
 use from_pest::FromPest;
 use infix::Infix;
 use op_expr::OpExpr;
+use pest::iterators::Pairs;
 use pest_ast::FromPest;
 use postfix::{CParamsBody, MlAppParam, Postfix, parse_postfix};
 use prefix::Prefix;
 use serde::Serialize;
 
-use crate::{Rule, operator_precedence::pratt_parser, pattern::Pattern};
+use crate::{Rule, diagnostics::Diagnostic, operator_precedence::pratt_parser, pattern::Pattern};
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
 #[pest_ast(rule(Rule::primary))]
@@ -23,8 +24,90 @@ pub enum Primary {
     Pattern(Pattern),
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct Expr {
+    inner: ExprInner,
+    diag: Diagnostic,
+}
+
+impl PartialEq for Expr {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
+}
+
+impl FromPest<'_> for Expr {
+    type Rule = Rule;
+
+    type FatalError = from_pest::Void;
+
+    fn from_pest(
+        pest: &mut pest::iterators::Pairs<'_, Self::Rule>,
+    ) -> Result<Self, from_pest::ConversionError<Self::FatalError>> {
+        let pest = pest.next();
+        if pest.is_none() {
+            return Err(from_pest::ConversionError::NoMatch);
+        }
+        let pest = pest.unwrap();
+
+        let diag = Diagnostic::from_span(&pest.as_span());
+        let inner = ExprInner::from_pest(&mut Pairs::single(pest))?;
+        Ok(Expr { inner, diag })
+    }
+}
+
+impl Expr {
+    #[allow(non_snake_case)]
+    pub fn Prefix(prefix: Prefix, expr: Box<Expr>, diag: Diagnostic) -> Self {
+        Expr {
+            inner: ExprInner::Prefix(prefix, expr),
+            diag,
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn Postfix(postfix: Postfix, expr: Box<Expr>, diag: Diagnostic) -> Self {
+        Expr {
+            inner: ExprInner::Postfix(postfix, expr),
+            diag,
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn Infix(infix: Infix, lhs: Box<Expr>, rhs: Box<Expr>, diag: Diagnostic) -> Self {
+        Expr {
+            inner: ExprInner::Infix(infix, lhs, rhs),
+            diag,
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn CApply(expr: Box<Expr>, params: Vec<Expr>, diag: Diagnostic) -> Self {
+        Expr {
+            inner: ExprInner::CApply(expr, params),
+            diag,
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn MLApply(expr: Box<Expr>, params: Vec<Expr>, diag: Diagnostic) -> Self {
+        Expr {
+            inner: ExprInner::MLApply(expr, params),
+            diag,
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn Primary(primary: Primary, diag: Diagnostic) -> Self {
+        Expr {
+            inner: ExprInner::Primary(primary),
+            diag,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
-pub enum Expr {
+pub enum ExprInner {
     Prefix(Prefix, Box<Expr>),
     Primary(Primary),
     Postfix(Postfix, Box<Expr>),
@@ -35,7 +118,7 @@ pub enum Expr {
     MLApply(Box<Expr>, Vec<Expr>),
 }
 
-impl FromPest<'_> for Expr {
+impl FromPest<'_> for ExprInner {
     type Rule = Rule;
 
     type FatalError = from_pest::Void;
@@ -51,20 +134,26 @@ impl FromPest<'_> for Expr {
 
         let expr: Result<Expr, _> = pratt_parser()
             .map_primary(|primary| {
+                let span = primary.as_span();
                 let mut pairs = pest::iterators::Pairs::single(primary);
+                let diag = Diagnostic::from_span(&span);
                 let primary = Primary::from_pest(&mut pairs)?;
-                Ok(Expr::Primary(primary))
+                Ok(Expr::Primary(primary, diag))
             })
             .map_prefix(|prefix, expr| {
+                let span = prefix.as_span();
                 let mut pairs = pest::iterators::Pairs::single(prefix);
+                let diag = Diagnostic::from_span(&span);
                 let prefix = Prefix::from_pest(&mut pairs)?;
                 let expr = expr?;
-                Ok(Expr::Prefix(prefix, Box::new(expr)))
+                Ok(Expr::Prefix(prefix, Box::new(expr), diag))
             })
             // find all PostfixExpr = ml_param which is church encoded
             // expand church encoded ml_param
             .map_postfix(|expr, postfix| {
                 let expr = expr?;
+                let span = postfix.as_span();
+                let diag = Diagnostic::from_span(&span);
                 let postfix = parse_postfix(postfix)?;
                 // expand church encoded ml_param
                 if let Postfix::MlAppParam(p) = postfix {
@@ -73,23 +162,25 @@ impl FromPest<'_> for Expr {
                     if let Some(p) = p.0 {
                         Ok(handle_expr_lift_c_params(expr, p))
                     } else {
-                        Ok(Expr::CApply(Box::new(expr), vec![]))
+                        Ok(Expr::CApply(Box::new(expr), vec![], diag))
                     }
                 } else {
-                    Ok(Expr::Postfix(postfix, Box::new(expr)))
+                    Ok(Expr::Postfix(postfix, Box::new(expr), diag))
                 }
             })
             .map_infix(|lhs, infix, rhs| {
                 let lhs = lhs?;
+                let span = infix.as_span();
                 let mut pairs = pest::iterators::Pairs::single(infix);
+                let diag = Diagnostic::from_span(&span);
                 let infix = Infix::from_pest(&mut pairs)?;
                 let rhs = rhs?;
 
-                Ok(Expr::Infix(infix, Box::new(lhs), Box::new(rhs)))
+                Ok(Expr::Infix(infix, Box::new(lhs), Box::new(rhs), diag))
             })
             .parse(pest);
 
-        expr
+        expr.map(|expr| expr.inner)
     }
 }
 
