@@ -105,7 +105,11 @@ impl FromPest<'_> for ExponentPart {
     fn from_pest(
         pest: &mut pest::iterators::Pairs<'_, Self::Rule>,
     ) -> Result<Self, from_pest::ConversionError<Self::FatalError>> {
-        let pair = pest.next().unwrap();
+        let pair = if let Some(p) = pest.next() {
+            p
+        } else {
+            return Err(from_pest::ConversionError::NoMatch);
+        };
         let value = parse_exponent_part(pair.as_span());
         Ok(ExponentPart { value })
     }
