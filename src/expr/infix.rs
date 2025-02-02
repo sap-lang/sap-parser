@@ -29,6 +29,7 @@ pub enum Infix {
     BitShiftR,
     Function(Id),
     Assign,
+    Set,
     MatchEquals,
     AssignSlot,
 }
@@ -72,6 +73,7 @@ impl FromPest<'_> for Infix {
             Rule::infix_assign => Ok(Infix::Assign),
             Rule::infix_match_equals => Ok(Infix::MatchEquals),
             Rule::infix_assign_slot => Ok(Infix::AssignSlot),
+            Rule::infix_set => Ok(Infix::Set),
             _ => unreachable!(),
         }
     }
@@ -111,5 +113,15 @@ mod tests {
                 value: "id".to_string()
             }))
         );
+    }
+
+    #[test]
+    fn test_infix_set() {
+        let pair = SapParser::parse(Rule::infix_op, ":=")
+            .unwrap()
+            .next()
+            .unwrap();
+        let infix = Infix::from_pest(&mut pest::iterators::Pairs::single(pair)).unwrap();
+        assert_eq!(infix, Infix::Set);
     }
 }

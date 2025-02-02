@@ -22,10 +22,6 @@ pub struct GlobalOptions {
     /// [1,2,3] -> [1,2,3,]
     /// {a:1,b:2} -> {a:1,b:2,}
     pub always_tailing_comma: bool,
-
-    /// binary function call to infix
-    /// `a b c` -> `b ~a~ c`
-    pub binary_function_to_infix: bool,
 }
 
 pub struct Context {

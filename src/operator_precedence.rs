@@ -14,6 +14,7 @@ pub fn pratt_parser() -> &'static PrattParser<Rule> {
             .op(Op::prefix(Rule::prefix_annotative_macro_call))
             // level 18 assign related
             .op(Op::infix(Rule::infix_assign, Assoc::Right)
+                | Op::infix(Rule::infix_set, Assoc::Right)
                 | Op::infix(Rule::infix_assign_yield, Assoc::Right)
                 | Op::infix(Rule::infix_assign_slot, Assoc::Right)
                 | Op::infix(Rule::infix_match_equals, Assoc::Right))

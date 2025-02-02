@@ -38,6 +38,7 @@ infix_extends     = @{ "<:" }
 // sugar for function application
 infix_function     = ${ "~" ~ id ~ "~" }
 infix_assign       = @{ "=" }
+infix_set       = @{ ":=" }
 infix_match_equals = @{ "?=" }
 infix_assign_slot  = @{ "::=" }
 // infix_assign_get_cont              =  { "->" ~ id ~ "=" }
@@ -122,6 +123,7 @@ infix_op = _{
   | infix_function
   | infix_assign
   | infix_match_equals
+  | infix_set
   | infix_assign_slot
 }
 
