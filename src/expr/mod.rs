@@ -154,6 +154,7 @@ impl FromPest<'_> for ExprInner {
                 let diag = Diagnostic::from_span(span);
                 let prefix = Prefix::from_pest(&mut pairs)?;
                 let expr = expr?;
+                let diag = diag.set_end_as(&expr.diag);
                 Ok(Expr::Prefix(prefix, Box::new(expr), diag))
             })
             // find all PostfixExpr = ml_param which is church encoded
@@ -162,6 +163,7 @@ impl FromPest<'_> for ExprInner {
                 let expr = expr?;
                 let span = postfix.as_span();
                 let diag = Diagnostic::from_span(span);
+                let diag = diag.set_start_as(&expr.diag);
                 let postfix = parse_postfix(postfix)?;
                 // expand church encoded ml_param
                 if let Postfix::MlAppParam(p) = postfix {
@@ -183,7 +185,8 @@ impl FromPest<'_> for ExprInner {
                 let diag = Diagnostic::from_span(span);
                 let infix = Infix::from_pest(&mut pairs)?;
                 let rhs = rhs?;
-
+                let diag = diag.set_start_as(&lhs.diag);
+                let diag = diag.set_end_as(&rhs.diag);
                 Ok(Expr::Infix(infix, Box::new(lhs), Box::new(rhs), diag))
             })
             .parse(pest);

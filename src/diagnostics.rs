@@ -12,8 +12,30 @@ pub struct Diagnostic {
     pub end_line: usize,
     pub end_col: usize,
     pub end_offset: usize,
+}
 
-    pub source_code: &'static str,
+impl Diagnostic {
+    pub fn set_start_as(self, other: &Self) -> Self {
+        Self {
+            start_line: other.start_line,
+            start_col: other.start_col,
+            start_offset: other.start_offset,
+            end_line: self.end_line,
+            end_col: self.end_col,
+            end_offset: self.end_offset,
+        }
+    }
+
+    pub fn set_end_as(self, other: &Self) -> Self {
+        Self {
+            start_line: self.start_line,
+            start_col: self.start_col,
+            start_offset: self.start_offset,
+            end_line: other.end_line,
+            end_col: other.end_col,
+            end_offset: other.end_offset,
+        }
+    }
 }
 
 impl PartialEq for Diagnostic {
@@ -28,7 +50,6 @@ impl PartialEq for Diagnostic {
                 && self.end_line == other.end_line
                 && self.end_col == other.end_col
                 && self.end_offset == other.end_offset
-                && self.source_code == other.source_code
         }
     }
 }
@@ -45,8 +66,6 @@ impl Diagnostic {
         let (end_line, end_col) = span.end_pos().line_col();
         let start_offset = span.start();
         let end_offset = span.end();
-        let source_code = span.as_str();
-        let source_code = unsafe { std::mem::transmute::<&str, &'static str>(source_code) };
         Self {
             start_line,
             start_col,
@@ -54,7 +73,6 @@ impl Diagnostic {
             end_line,
             end_col,
             end_offset,
-            source_code,
         }
     }
 
@@ -66,7 +84,6 @@ impl Diagnostic {
             end_line: 0,
             end_col: 0,
             end_offset: 0,
-            source_code: "",
         }
     }
 }
