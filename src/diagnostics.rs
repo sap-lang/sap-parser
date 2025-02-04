@@ -1,4 +1,5 @@
 use core::fmt;
+use std::mem::ManuallyDrop;
 
 use pest::Span;
 use serde::Serialize;
@@ -12,6 +13,8 @@ pub struct Diagnostic {
     pub end_line: usize,
     pub end_col: usize,
     pub end_offset: usize,
+
+    pub source_code: &'static str,
 }
 
 impl fmt::Debug for Diagnostic {
@@ -26,6 +29,8 @@ impl Diagnostic {
         let (end_line, end_col) = span.end_pos().line_col();
         let start_offset = span.start();
         let end_offset = span.end();
+        let source_code = span.as_str();
+        let source_code = unsafe { std::mem::transmute::<&str, &'static str>(source_code) };
         Self {
             start_line,
             start_col,
@@ -33,6 +38,7 @@ impl Diagnostic {
             end_line,
             end_col,
             end_offset,
+            source_code,
         }
     }
 
@@ -44,6 +50,7 @@ impl Diagnostic {
             end_line: 0,
             end_col: 0,
             end_offset: 0,
+            source_code: "",
         }
     }
 }

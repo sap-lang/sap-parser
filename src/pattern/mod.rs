@@ -18,13 +18,6 @@ pub struct EclipsePattern {
     pub value: Id,
 }
 
-#[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
-#[pest_ast(rule(Rule::macro_pattern))]
-pub struct MacroPattern {
-    pub macro_name: MacroId,
-    pub pattern: Box<Pattern>,
-}
-
 #[derive(Debug, Clone, FromPest, PartialEq, Serialize)]
 #[pest_ast(rule(Rule::pattern))]
 pub enum Pattern {
@@ -32,7 +25,6 @@ pub enum Pattern {
     Literal(Literal),
     ArrayPattern(ArrayPattern),
     ObjectPattern(ObjectPattern),
-    MacroPattern(MacroPattern),
 }
 
 #[cfg(test)]
