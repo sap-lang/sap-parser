@@ -1,7 +1,7 @@
 use pest_ast::FromPest;
 use serde::Serialize;
 
-use crate::{Rule, literal::object::ObjectKey};
+use crate::{Rule, diagnostics::Diagnostic, literal::object::ObjectKey};
 
 use super::{EclipsePattern, Pattern};
 
@@ -28,6 +28,8 @@ pub struct ObjectPatternBody {
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
 #[pest_ast(rule(Rule::object_pattern))]
 pub struct ObjectPattern {
+    #[pest_ast(outer(with(Diagnostic::from_span)))]
+    pub diag: Diagnostic,
     pub body: ObjectPatternBody,
 }
 

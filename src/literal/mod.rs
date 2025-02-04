@@ -10,7 +10,7 @@ use pest_ast::FromPest;
 use serde::Serialize;
 use string::SapString;
 
-use crate::Rule;
+use crate::{Rule, ast_with_diagnostic};
 
 fn parse_bool(span: pest::Span) -> bool {
     let str = span.as_str();
@@ -41,13 +41,22 @@ impl Serialize for Boolean {
 #[pest_ast(rule(Rule::void))]
 pub struct Void;
 
-#[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
-#[pest_ast(rule(Rule::literal))]
-pub enum Literal {
-    Boolean(Boolean),
-    Void(Void),
-    String(SapString),
-    Number(SapNumber),
+// #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
+// #[pest_ast(rule(Rule::literal))]
+// pub enum Literal {
+//     Boolean(Boolean),
+//     Void(Void),
+//     String(SapString),
+//     Number(SapNumber),
+// }
+
+ast_with_diagnostic! {
+    Literal(literal) {
+        Boolean(boolean: Boolean),
+        Void(void: Void),
+        String(string: SapString),
+        Number(number: SapNumber),
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]

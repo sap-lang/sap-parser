@@ -1,11 +1,13 @@
 use pest_ast::FromPest;
 use serde::Serialize;
 
-use crate::{Rule, expr::Expr};
+use crate::{Rule, diagnostics::Diagnostic, expr::Expr};
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
 #[pest_ast(rule(Rule::array_body))]
 pub struct ArrayBody {
+    #[pest_ast(outer(with(Diagnostic::from_span)))]
+    pub diag: Diagnostic,
     pub elems: Vec<Expr>,
 }
 

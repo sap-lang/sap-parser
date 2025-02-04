@@ -1,7 +1,7 @@
 use pest_ast::FromPest;
 use serde::Serialize;
 
-use crate::{Rule, expr::Expr, id::Id};
+use crate::{Rule, diagnostics::Diagnostic, expr::Expr, id::Id};
 
 use super::string::SapString;
 
@@ -31,6 +31,8 @@ pub struct ObjectElemKv {
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
 #[pest_ast(rule(Rule::object_body))]
 pub struct ObjectBody {
+    #[pest_ast(outer(with(Diagnostic::from_span)))]
+    pub diag: Diagnostic,
     pub body: Vec<ObjectElemKv>,
 }
 

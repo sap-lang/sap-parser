@@ -1,7 +1,7 @@
 use pest_ast::FromPest;
 use serde::Serialize;
 
-use crate::Rule;
+use crate::{Rule, diagnostics::Diagnostic};
 
 use super::{EclipsePattern, Pattern};
 
@@ -21,6 +21,8 @@ pub struct ArrayPatternBody {
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
 #[pest_ast(rule(Rule::array_pattern))]
 pub struct ArrayPattern {
+    #[pest_ast(outer(with(Diagnostic::from_span)))]
+    pub diag: Diagnostic,
     pub body: ArrayPatternBody,
 }
 
@@ -32,6 +34,7 @@ mod tests {
     use super::*;
     use crate::{
         Rule, SapParser,
+        diagnostics::Diagnostic,
         id::{Id, NormalId},
     };
 
@@ -48,7 +51,8 @@ mod tests {
             ArrayPatternElem::EclipsePattern(EclipsePattern {
                 value: Id::NormalId(NormalId {
                     value: "a".to_string()
-                })
+                }),
+                diag: Diagnostic::test()
             })
         );
     }
@@ -67,7 +71,8 @@ mod tests {
             ArrayPatternElem::EclipsePattern(EclipsePattern {
                 value: Id::NormalId(NormalId {
                     value: "a".to_string()
-                })
+                }),
+                diag: Diagnostic::test()
             })
         );
         assert_eq!(
@@ -75,7 +80,8 @@ mod tests {
             ArrayPatternElem::EclipsePattern(EclipsePattern {
                 value: Id::NormalId(NormalId {
                     value: "b".to_string()
-                })
+                }),
+                diag: Diagnostic::test()
             })
         );
     }
@@ -98,7 +104,8 @@ mod tests {
             ArrayPatternElem::EclipsePattern(EclipsePattern {
                 value: Id::NormalId(NormalId {
                     value: "a".to_string()
-                })
+                }),
+                diag: Diagnostic::test()
             })
         );
         assert_eq!(
@@ -106,7 +113,8 @@ mod tests {
             ArrayPatternElem::EclipsePattern(EclipsePattern {
                 value: Id::NormalId(NormalId {
                     value: "b".to_string()
-                })
+                }),
+                diag: Diagnostic::test()
             })
         );
     }

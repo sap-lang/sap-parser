@@ -276,7 +276,7 @@ block      = { "{" ~ NEWLINE* ~ expr ~ (next_stmt+ ~ expr)* ~ next_stmt* ~ "}" }
 
 // ----- expr -----
 
-op_expr = {
+op_expr = _{
     block
   | lambda_expr
   | paren_expr
