@@ -6,12 +6,7 @@ use object::ObjectPattern;
 use pest_ast::FromPest;
 use serde::Serialize;
 
-use crate::{
-    Rule,
-    diagnostics::Diagnostic,
-    id::Id,
-    literal::Literal,
-};
+use crate::{Rule, diagnostics::Diagnostic, id::Id, literal::Literal};
 
 #[derive(Debug, Clone, PartialEq, FromPest, Serialize)]
 #[pest_ast(rule(Rule::eclipse_pattern))]

@@ -46,10 +46,7 @@ mod tests {
     use from_pest::FromPest;
     use pest::Parser;
 
-    use crate::{
-        Rule,
-        expr::prefix::Prefix,
-    };
+    use crate::{Rule, expr::prefix::Prefix};
 
     #[test]
     fn test_prefix_not() {

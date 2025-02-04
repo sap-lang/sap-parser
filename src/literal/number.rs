@@ -161,14 +161,22 @@ impl Float {
                 let value = float2.value.value() as f64;
                 let sub = float2.sub.value() as f64;
                 let sub = sub / 10_f64.powf(digits(sub));
-                let exponent = float2.exponent_part.clone().unwrap().value as f64;
+                let exponent = float2
+                    .exponent_part
+                    .clone()
+                    .unwrap_or(ExponentPart { value: 1 })
+                    .value as f64;
                 value + sub * 10_f64.powf(exponent)
             }
             Float::Float3(float3) => {
                 // 0.sub * 10^exponent
                 let sub = float3.sub.value() as f64;
                 let sub = sub / 10_f64.powf(digits(sub));
-                let exponent = float3.exponent_part.clone().unwrap().value as f64;
+                let exponent = float3
+                    .exponent_part
+                    .clone()
+                    .unwrap_or(ExponentPart { value: 1 })
+                    .value as f64;
                 sub * 10_f64.powf(exponent)
             }
         }
