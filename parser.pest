@@ -38,7 +38,7 @@ infix_extends     = @{ "<:" }
 // sugar for function application
 infix_function     = ${ "~" ~ id ~ "~" }
 infix_assign       = @{ "=" }
-infix_set       = @{ ":=" }
+infix_set          = @{ ":=" }
 infix_match_equals = @{ "?=" }
 infix_assign_slot  = @{ "::=" }
 // infix_assign_get_cont              =  { "->" ~ id ~ "=" }
@@ -77,9 +77,9 @@ magic_fn_id = @{
 
 prefix_annotative_macro_call = { "@" ~ macro_id ~ ("(" ~ expr ~ ")")? }
 
-c_params_body = { expr ~ ("," ~ NEWLINE* ~ expr)+ ~ NEWLINE* ~ ","? }
-postfix_ml_app_param  = { expr }
-postfix_index         = { "[" ~ expr ~ "]" }
+c_params_body        = { expr ~ ("," ~ NEWLINE* ~ expr)+ ~ NEWLINE* ~ ","? }
+postfix_ml_app_param = { expr }
+postfix_index        = { "[" ~ expr ~ "]" }
 postfix_slice        = { "[" ~ expr? ~ ":" ~ expr? ~ (":" ~ expr?)? ~ "]" }
 postfix_access       = { "." ~ id }
 postfix_c_app_params = {
@@ -222,10 +222,8 @@ object_literal = _{
 }
 
 // ----- other -----
-// null      = { "null" }
 void = { "(" ~ ")" }
-// slot      = { "<>" }
-
+slot = { "<" ~ ">" }
 // ----- sum ------
 
 literal = {
@@ -233,7 +231,7 @@ literal = {
   | number
   | boolean
   | void // | null
-  // | slot
+  | slot
 }
 
 compound_literal = { array_literal | object_literal | literal }
@@ -250,7 +248,6 @@ object_pattern_kv   = { object_key ~ (":" ~ NEWLINE* ~ pattern)? }
 object_pattern_elem = { object_pattern_kv | eclipse_pattern }
 object_pattern_body = { object_pattern_elem ~ ("," ~ NEWLINE* ~ object_pattern_elem)* }
 object_pattern      = { "^{" ~ NEWLINE* ~ object_pattern_body? ~ NEWLINE* ~ ","? ~ NEWLINE* ~ "}" }
-
 
 pattern = {
     array_pattern
@@ -275,19 +272,19 @@ paren_expr = { "(" ~ expr ~ ")" }
 block      = { "{" ~ NEWLINE* ~ expr ~ (next_stmt+ ~ expr)* ~ next_stmt* ~ "}" }
 
 // ----- expr -----
+hole = @{ "?" ~ id }
 
 op_expr = _{
     block
   | lambda_expr
+  | hole
   | paren_expr
   | compound_literal
   | id
 }
 
-
 primary = { op_expr | pattern }
 expr    = { prefix_op* ~ primary ~ postfix_op* ~ (infix_op ~ NEWLINE* ~ prefix_op* ~ primary ~ postfix_op*)* }
-
 
 // ========== FINAL ==========
 
