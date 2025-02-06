@@ -164,7 +164,7 @@ impl Float {
                 let exponent = float2
                     .exponent_part
                     .clone()
-                    .unwrap_or(ExponentPart { value: 1 })
+                    .unwrap_or(ExponentPart { value: 0 })
                     .value as f64;
                 value + sub * 10_f64.powf(exponent)
             }
@@ -175,7 +175,7 @@ impl Float {
                 let exponent = float3
                     .exponent_part
                     .clone()
-                    .unwrap_or(ExponentPart { value: 1 })
+                    .unwrap_or(ExponentPart { value: 0 })
                     .value as f64;
                 sub * 10_f64.powf(exponent)
             }
