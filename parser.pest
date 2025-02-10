@@ -41,12 +41,11 @@ infix_assign       = @{ "=" }
 infix_set          = @{ ":=" }
 infix_match_equals = @{ "?=" }
 infix_assign_slot  = @{ "::=" }
-// infix_assign_get_cont              =  { "->" ~ id ~ "=" }
-// infix_assign_get_cont_match_equals =  { "->" ~ id ~ "?=" }
 infix_assign_yield = @{ "=<=" }
+infix_has_field    = @{ ".?" }
 // sugar for function application
 infix_pipe = @{ "|>" }
-// sugar a $ f 1 2 = ^{ f : g } ?= a ? g a 1 2 : f a 1 2
+// sugar a $ f 1 2 = a .? f ? a.f a 1 2 : f a 1 2
 infix_find_and_call_with_this = @{ "$" }
 
 magic_fn_id = @{
@@ -73,6 +72,8 @@ magic_fn_id = @{
   | "([])"
   | "([::])"
   | "(neg)"
+  | "(.?)"
+  | "(.|)"
 }
 
 prefix_annotative_macro_call = { "@" ~ macro_id ~ ("(" ~ expr ~ ")")? }
@@ -82,6 +83,8 @@ postfix_ml_app_param = { expr }
 postfix_index        = { "[" ~ expr ~ "]" }
 postfix_slice        = { "[" ~ expr? ~ ":" ~ expr? ~ (":" ~ expr?)? ~ "]" }
 postfix_access       = { "." ~ id }
+postfix_length       = { ".|" }
+
 postfix_c_app_params = {
     "(" ~ NEWLINE* ~ c_params_body ~ NEWLINE* ~ ")"
   | "(" ~ NEWLINE* ~ "," ~ NEWLINE* ~ ")"
@@ -125,12 +128,14 @@ infix_op = _{
   | infix_match_equals
   | infix_set
   | infix_assign_slot
+  | infix_has_field
 }
 
 postfix_op = _{
     postfix_trinary_op
   | postfix_slice
   | postfix_index
+  | postfix_length
   | postfix_access
   | postfix_c_app_params
   | postfix_ml_app_param // 需要后续处理一个church list decode
