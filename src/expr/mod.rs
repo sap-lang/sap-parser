@@ -277,7 +277,7 @@ mod tests {
 main = _{
     a = 1
     b = 2
-    a + b |> puts
+    a |> b |> c
 }",
         )
         .unwrap()

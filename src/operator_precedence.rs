@@ -16,10 +16,10 @@ pub fn pratt_parser() -> &'static PrattParser<Rule> {
             .op(Op::infix(Rule::infix_assign, Assoc::Right)
                 | Op::infix(Rule::infix_set, Assoc::Right)
                 | Op::infix(Rule::infix_assign_yield, Assoc::Right)
-                | Op::infix(Rule::infix_assign_slot, Assoc::Right)
-                | Op::infix(Rule::infix_match_equals, Assoc::Right))
+                | Op::infix(Rule::infix_assign_slot, Assoc::Right))
             // level 17 _ ? _ : _
             .op(Op::postfix(Rule::postfix_trinary_op))
+            .op(Op::infix(Rule::infix_match_equals, Assoc::Right))
             // lelve 16 _ ($ |>) _
             .op(Op::infix(Rule::infix_pipe, Assoc::Left)
                 | Op::infix(Rule::infix_find_and_call_with_this, Assoc::Left))
